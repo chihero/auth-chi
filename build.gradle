@@ -1,0 +1,71 @@
+import org.ajoberstar.grgit.Grgit
+
+apply from: 'config/keystore.gradle'
+
+buildscript {
+    repositories {
+        jcenter()
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.0.0'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
+        classpath 'org.ajoberstar:gradle-git:1.7.2'
+        classpath "org.jacoco:org.jacoco.core:0.8.5"
+    }
+}
+
+subprojects {
+    repositories {
+        google()
+        jcenter()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+ext.verifyKeystore()
+
+try {
+    def grgit = Grgit.open(dir: '.')
+    def lastCommit = grgit.head()
+
+    project.ext.versionNum = grgit.log(includes:['HEAD']).size()
+    project.ext.versionName = grgit.describe()
+    project.ext.versionDate = lastCommit.getDate()
+    if (project.ext.versionName == null) {
+        project.ext.versionName = 'DEV'
+    }
+} catch (Exception ignored) {
+    project.ext.versionNum = 0
+    project.ext.versionName = 'DEV'
+    project.ext.versionDate = new Date()
+}
+
+project.ext {
+    minSdkVersion = 16
+    compileSdkVersion = 30
+    buildToolsVersion = '30.0.0'
+
+    googleVersions = [
+        glide                 : '4.11.0',
+        material              : '1.1.0',
+    ]
+
+    androidXVersions = [
+        annotation            : '1.1.0',
+        appCompat             : '1.1.0',
+        browser               : '1.2.0',
+    ]
+
+    okioVersion = '1.17.5'
+    jodaVersion = '2.10.6'
+}
+
+task showVersion {
+    doLast {
+        logger.lifecycle("Version ID: " + project.versionNum)
+        logger.lifecycle("Version Name: " + project.versionName)
+        logger.lifecycle("Version Date: " + project.versionDate)
+    }
+}
